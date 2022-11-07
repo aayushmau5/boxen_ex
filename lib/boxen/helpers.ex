@@ -56,11 +56,43 @@ defmodule Boxen.Helpers do
     case :io.columns() do
       {:ok, width} -> width
       # default 80 columns
-      {:error, _} -> 80
+      {:error, _} -> 120
     end
   end
 
-  def hard_wrap_text(text, max_width) do
+  def hard_wrap_text(text, columns) do
     # TODO: implement this function
+  end
+
+  @doc """
+  Aligns a text
+  """
+  @spec ansi_align_text(text :: String.t(), alignment :: :left | :right | :center) :: String.t()
+  def ansi_align_text(text, alignment) do
+    padding = " "
+    max_width = widest_line(text)
+
+    case alignment do
+      :center ->
+        text
+        |> String.split("\n")
+        |> Enum.map(fn line ->
+          padding_length = floor((max_width - text_representation_length(line)) / 2)
+          String.duplicate(padding, padding_length) <> line
+        end)
+        |> Enum.join("\n")
+
+      :right ->
+        text
+        |> String.split("\n")
+        |> Enum.map(fn line ->
+          padding_length = max_width - text_representation_length(line)
+          String.duplicate(padding, padding_length) <> line
+        end)
+        |> Enum.join("\n")
+
+      _ ->
+        text
+    end
   end
 end
