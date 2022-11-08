@@ -1,5 +1,15 @@
 defmodule Boxen.Boxes do
   @boxes [
+    default: %Boxen.Box{
+      top_left: " ",
+      top: " ",
+      top_right: " ",
+      right: " ",
+      bottom_right: " ",
+      bottom: " ",
+      bottom_left: " ",
+      left: " "
+    },
     single: %Boxen.Box{
       top_left: "┌",
       top: "─",
@@ -96,5 +106,10 @@ defmodule Boxen.Boxes do
   @spec get_box(type :: atom) :: t()
   def get_box(type) when is_atom(type) do
     Keyword.get(@boxes, type, nil)
+  end
+
+  @spec setup_box(box :: t()) :: t()
+  def setup_box(box) when is_map(box) do
+    Map.merge(Keyword.get(@boxes, :default), box)
   end
 end

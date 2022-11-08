@@ -11,17 +11,15 @@ defmodule Boxen do
 
   # @spec boxify(binary, keyword) :: {:ok, binary()} | {:error, binary()}
   def boxify(input_text, opts \\ []) do
-    # TODO: usage with terminal width(wrapping, etc.)
-    # TODO: deal with title and width
-    # TODO: ability to add your own box through opts
     # TODO: add colors: https://hexdocs.pm/elixir/1.14.1/IO.ANSI.html
+    # TODO: deal with title and width
     # TODO: ability to change line height(for livebook)
-    # TODO: return {:ok, text} or {:error, reason} response
-    # TODO: make livebook compatible(with width, etc)
+    # TODO: make livebook compatible(with determining width, etc)
     # TODO: suitable error for non-existing box
-    # TODO: replace string.duplice with String.pad_leading() | String.pad_trailing()
+    # TODO: return {:ok, text} or {:error, reason} response
 
-    box = Boxes.get_box(Keyword.get(opts, :box_type, :single))
+    box_type = Keyword.get(opts, :box_type, :single)
+    new_box = Keyword.get(opts, :box, nil)
     title = Keyword.get(opts, :title, nil)
     title_alignment = Keyword.get(opts, :title_alignment, :left)
     text_alignment = Keyword.get(opts, :text_alignment, :left)
@@ -37,6 +35,14 @@ defmodule Boxen do
     padding = prevent_padding_overflow(width, padding)
 
     input_text = input_text |> Helpers.strip_ansi() |> make_text(width, padding, text_alignment)
+
+    # Arg `:box` overrides `:box_type`
+    box =
+      if new_box do
+        Boxes.setup_box(new_box)
+      else
+        Boxes.get_box(box_type)
+      end
 
     box_content(box, input_text,
       width: width,
