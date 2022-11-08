@@ -3,10 +3,13 @@ defmodule Boxen do
   Documentation for `Boxen`.
   """
 
-  alias Boxen.{Boxes, Helpers}
+  alias Boxen.{Boxes, Helpers, Helpers.WrapText}
 
   @padding " "
+  @borders_width 2
+  @newline "\n"
 
+  # @spec boxify(binary, keyword) :: {:ok, binary()} | {:error, binary()}
   def boxify(input_text, opts \\ []) do
     # TODO: usage with terminal width(wrapping, etc.)
     # TODO: deal with title and width
@@ -16,6 +19,7 @@ defmodule Boxen do
     # TODO: return {:ok, text} or {:error, reason} response
     # TODO: make livebook compatible(with width, etc)
     # TODO: suitable error for non-existing box
+    # TODO: replace string.duplice with String.pad_leading() | String.pad_trailing()
 
     box = Boxes.get_box(Keyword.get(opts, :box_type, :single))
     title = Keyword.get(opts, :title, nil)
@@ -27,11 +31,12 @@ defmodule Boxen do
     margin = Keyword.get(opts, :margin, 0) |> set_map_value()
     width = Keyword.get(opts, :width, nil)
 
-    width = determine_dimension(input_text, padding: padding, margin: margin, width: width)
-    new_padding = prevent_padding_overflow(width, padding)
+    {width, margin} =
+      determine_dimension(input_text, padding: padding, margin: margin, width: width)
 
-    input_text =
-      input_text |> Helpers.strip_ansi() |> make_text(width, new_padding, text_alignment)
+    padding = prevent_padding_overflow(width, padding)
+
+    input_text = input_text |> Helpers.strip_ansi() |> make_text(width, padding, text_alignment)
 
     box_content(box, input_text,
       width: width,
@@ -45,18 +50,37 @@ defmodule Boxen do
   defp determine_dimension(text, opts) do
     padding = Keyword.get(opts, :padding)
     margin = Keyword.get(opts, :margin)
-    width_override = Keyword.get(opts, :width)
-    width_override? = !!width_override
+    width = Keyword.get(opts, :width)
     columns = Helpers.get_terminal_columns()
 
-    # => 2 is borders width
-    # max_width = columns - margin.left - margin.right - 2
+    width_override? = width != nil
+    max_width = columns - margin.left - margin.right - @borders_width
 
-    # max_available_width = Helpers.get_terminal_columns() - padding.left - padding.right - 2
-    widest = Helpers.widest_line(text) + padding.left + padding.right
-    width_override = if width_override?, do: width_override, else: widest
+    widest =
+      Helpers.widest_line(WrapText.wrap(text, columns - @borders_width)) + padding.left +
+        padding.right
 
-    width_override
+    width = if width_override?, do: width, else: widest
+
+    margin_change =
+      if !width_override? && (margin.left != 0 && margin.right != 0) && width > max_width do
+        space_for_margins = columns - width - @borders_width
+        multiplier = space_for_margins / margin.left + margin.right
+        margin_left = max(0, floor(margin.left * multiplier))
+        margin_right = max(0, floor(margin.right * multiplier))
+        Map.merge(margin, %{left: margin_left, right: margin_right})
+      else
+        margin
+      end
+
+    width =
+      if !width_override? do
+        min(width, columns - @borders_width - margin_change.left - margin_change.right)
+      else
+        width
+      end
+
+    {width, margin_change}
   end
 
   defp make_title(title, placeholder, alignment) do
@@ -99,7 +123,58 @@ defmodule Boxen do
 
   defp make_text(text, width, padding, text_alignment) do
     text = Helpers.ansi_align_text(text, text_alignment)
-    lines = String.split(text, "\n")
+    lines = String.split(text, @newline)
+    text_width = Helpers.widest_line(text)
+    max = width - padding.left - padding.right
+
+    lines =
+      if text_width > max do
+        Enum.reduce(lines, [], fn line, acc ->
+          aligned_lines =
+            line
+            |> WrapText.wrap_line(max)
+            |> Helpers.ansi_align_text(text_alignment)
+            |> String.split("\n")
+
+          longest_length =
+            Enum.reduce(aligned_lines, 0, fn text, width ->
+              max(width, Helpers.text_representation_length(text))
+            end)
+
+          lines =
+            Enum.map(aligned_lines, fn line ->
+              case text_alignment do
+                :right -> String.duplicate(@padding, max - longest_length) <> line
+                :center -> String.duplicate(@padding, div(max - longest_length, 2)) <> line
+                _ -> line
+              end
+            end)
+
+          acc ++ lines
+        end)
+      else
+        lines
+      end
+
+    lines =
+      if text_width < max do
+        case text_alignment do
+          :right ->
+            Enum.map(lines, fn line ->
+              String.duplicate(@padding, max - text_width) <> line
+            end)
+
+          :center ->
+            Enum.map(lines, fn line ->
+              String.duplicate(@padding, div(max - text_width, 2)) <> line
+            end)
+
+          _ ->
+            lines
+        end
+      else
+        lines
+      end
 
     padding_left = String.duplicate(@padding, padding.left)
     padding_right = String.duplicate(@padding, padding.right)
@@ -139,7 +214,7 @@ defmodule Boxen do
         lines
       end
 
-    Enum.join(lines, "\n")
+    Enum.join(lines, @newline)
   end
 
   defp prevent_padding_overflow(width, padding) do
@@ -153,7 +228,7 @@ defmodule Boxen do
   end
 
   defp set_map_value(val) when is_number(val) do
-    %{top: val, right: val, bottom: val, left: val}
+    %{top: val, right: val * 3, bottom: val, left: val * 3}
   end
 
   defp set_map_value(val) when is_map(val) do
@@ -168,8 +243,8 @@ defmodule Boxen do
     title_alignment = Keyword.get(opts, :title_alignment)
     columns = Helpers.get_terminal_columns()
 
-    margin_top = String.duplicate("\n", margin.top)
-    margin_bottom = String.duplicate("\n", margin.bottom)
+    margin_top = String.duplicate(@newline, margin.top)
+    margin_bottom = String.duplicate(@newline, margin.bottom)
     margin_left = String.duplicate(@padding, margin.left)
 
     title =
@@ -188,7 +263,7 @@ defmodule Boxen do
         String.duplicate(box.bottom, content_width) <> box.bottom_right <> margin_bottom
 
     line_separator =
-      if content_width + 2 + margin.left >= columns do
+      if content_width + @borders_width + margin.left >= columns do
         ""
       else
         "\n"
@@ -196,7 +271,7 @@ defmodule Boxen do
 
     middle =
       text
-      |> String.split("\n")
+      |> String.split(@newline)
       |> Enum.map(fn line -> margin_left <> box.left <> line <> box.right end)
       |> Enum.join(line_separator)
 

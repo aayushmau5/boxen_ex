@@ -60,10 +60,6 @@ defmodule Boxen.Helpers do
     end
   end
 
-  def hard_wrap_text(text, columns) do
-    # TODO: implement this function
-  end
-
   @doc """
   Aligns a text
   """
@@ -93,6 +89,156 @@ defmodule Boxen.Helpers do
 
       _ ->
         text
+    end
+  end
+end
+
+defmodule Boxen.Helpers.WrapText do
+  @doc """
+  Word wraps a text with ANSI escape codes
+  """
+
+  alias Boxen.Helpers
+
+  # def wrap(text, columns) do
+  #   text
+  #   |> String.replace(~r/\r\n/, "\n")
+  #   |> String.split("\n")
+  #   |> Enum.map(fn line -> wrap_line(line, columns) end)
+  #   |> Enum.join("\n")
+  # end
+
+  # def wrap_line(line, columns) do
+  #   String.split(line, " ")
+  #   |> Enum.with_index(fn word, index ->
+  #     {index, word}
+  #   end)
+  #   |> Enum.reduce([''], fn {index, word}, rows ->
+  #     word_length = Helpers.text_representation_length(word)
+
+  #     row_length = Helpers.text_representation_length(rows[length(rows) - 1])
+
+  #     # if index != 0 do
+  #     #   if row_length >= columns && ()
+  #     # end
+
+  #     if word_length > columns do
+  #       remaining_columns = columns - row_length
+  #       breaks_starting_this_line = 1 + floor((word_length - remaining_columns - 1) / columns)
+  #       breaks_starting_next_line = floor((word_length - 1) / columns)
+
+  #       if breaks_starting_next_line < breaks_starting_this_line do
+  #         rows ++ ['']
+  #       end
+  #     end
+  #   end)
+  # end
+
+  # defp wrap_word(rows, word, columns) do
+  #   characters = String.split(word)
+
+  # end
+
+  # def wrap(text, max_line_length) do
+  #   text
+  #   |> String.split("\n")
+  #   |> Enum.map(fn line -> wrap_line(line, max_line_length) end)
+  #   |> Enum.join("\n")
+  # end
+
+  # def wrap_line(string, max_line_length) do
+  #   [word | rest] = String.split(string, ~r/\s+/, trim: true)
+
+  #   lines_assemble(rest, max_line_length, Helpers.text_representation_length(word), word, [])
+  #   |> Enum.join("\n")
+  # end
+
+  # defp lines_assemble([], max, word_length, line, acc), do: [line | acc] |> Enum.reverse()
+
+  # defp lines_assemble([word | rest], max, word_length, line, acc) do
+  #   if word_length + 1 + Helpers.text_representation_length(word) > max do
+  #     lines_assemble(rest, max, Helpers.text_representation_length(word), word, [line | acc])
+  #   else
+  #     lines_assemble(
+  #       rest,
+  #       max,
+  #       word_length + 1 + Helpers.text_representation_length(word),
+  #       line <> " " <> word,
+  #       acc
+  #     )
+  #   end
+  # end
+  # def wrap(text, max_line_length) do
+  #   text
+  #   |> String.split("\n")
+  #   |> Enum.map(fn line -> wrap_line(line, max_line_length) end)
+  #   |> Enum.join("\n")
+  # end
+
+  # def wrap_line(string, max_line_length) do
+  #   [word | rest] = String.split(string, ~r/\s+/, trim: true)
+
+  #   lines_assemble(rest, max_line_length, Helpers.text_representation_length(word), word)
+  # end
+
+  # defp lines_assemble([], max, word_length, line) do
+  #   break_line(line, word_length, max)
+  # end
+
+  # defp lines_assemble([next_word | rest], max, word_length, line) do
+  #   break_line(line, word_length, max) <>
+  #     "\n" <>
+  #     lines_assemble(
+  #       rest,
+  #       max,
+  #       Helpers.text_representation_length(next_word),
+  #       next_word
+  #     )
+  # end
+
+  # defp break_line(line, word_length, max) do
+  #   if word_length > max do
+  #     {first, second} = String.split_at(line, max)
+  #     first <> "\n" <> break_line(second, Helpers.text_representation_length(second), max)
+  #   else
+  #     line
+  #   end
+  # end
+
+  def wrap(text, max_line_length) do
+    text
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn line -> wrap_line(line, max_line_length) end)
+    |> Enum.join("\n")
+  end
+
+  def wrap_line(string, max_line_length) do
+    [word | rest] = String.split(string, ~r/\s+/, trim: true)
+    break_line(word, Helpers.text_representation_length(word), max_line_length, rest)
+  end
+
+  defp break_line(word, word_length, max, []) do
+    if word_length > max do
+      {first, second} = String.split_at(word, max)
+      first <> "\n" <> break_line(second, Helpers.text_representation_length(second), max, [])
+    else
+      word
+    end
+  end
+
+  defp break_line(word, word_length, max, next_words) do
+    if word_length > max do
+      {first, second} = String.split_at(word, max)
+
+      first <>
+        "\n" <> break_line(second, Helpers.text_representation_length(second), max, next_words)
+    else
+      [next_word | rest] = next_words
+      next_word_length = Helpers.text_representation_length(next_word)
+      combined_word_length = word_length + 1 + next_word_length
+      combined_word = word <> " " <> next_word
+
+      break_line(combined_word, combined_word_length, max, rest)
     end
   end
 end
