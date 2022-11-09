@@ -11,12 +11,12 @@ defmodule Boxen do
 
   # @spec boxify(binary, keyword) :: {:ok, binary()} | {:error, binary()}
   def boxify(input_text, opts \\ []) do
-    # TODO: add colors: https://hexdocs.pm/elixir/1.14.1/IO.ANSI.html
-    # TODO: deal with title and width
-    # TODO: ability to change line height(for livebook)
-    # TODO: make livebook compatible(with determining width, etc)
+    # TODO: refactor functions(with thought for errors and response)
     # TODO: suitable error for non-existing box
     # TODO: return {:ok, text} or {:error, reason} response
+    # TODO: add colors: https://hexdocs.pm/elixir/1.14.1/IO.ANSI.html
+    # TODO: ability to change line height(for livebook)
+    # TODO: make livebook compatible(with determining width, etc)
 
     box_type = Keyword.get(opts, :box_type, :single)
     new_box = Keyword.get(opts, :box, nil)
@@ -29,8 +29,8 @@ defmodule Boxen do
     margin = Keyword.get(opts, :margin, 0) |> set_map_value()
     width = Keyword.get(opts, :width, nil)
 
-    {width, margin} =
-      determine_dimension(input_text, padding: padding, margin: margin, width: width)
+    {width, margin, title} =
+      determine_dimension(input_text, padding: padding, margin: margin, width: width, title: title)
 
     padding = prevent_padding_overflow(width, padding)
 
@@ -57,6 +57,7 @@ defmodule Boxen do
     padding = Keyword.get(opts, :padding)
     margin = Keyword.get(opts, :margin)
     width = Keyword.get(opts, :width)
+    title = Keyword.get(opts, :title)
     columns = Helpers.get_terminal_columns()
 
     width_override? = width != nil
@@ -65,6 +66,23 @@ defmodule Boxen do
     widest =
       Helpers.widest_line(WrapText.wrap(text, columns - @borders_width)) + padding.left +
         padding.right
+
+    title =
+      if title do
+        if width_override? do
+          title = String.slice(title, 0, max(0, width - 2))
+          if String.length(title) != 0, do: " #{title} ", else: title
+        else
+          title = String.slice(title, 0, max(0, max_width - 2))
+          if String.length(title) != 0, do: " #{title} ", else: title
+        end
+      else
+        title
+      end
+
+    title_width = if title, do: Helpers.text_representation_length(title), else: 0
+
+    width = if width_override? && title_width > widest, do: title_width, else: width
 
     width = if width_override?, do: width, else: widest
 
@@ -86,11 +104,10 @@ defmodule Boxen do
         width
       end
 
-    {width, margin_change}
+    {width, margin_change, title}
   end
 
   defp make_title(title, placeholder, alignment) do
-    title = " #{title} "
     title_width = Helpers.text_representation_length(title)
     placeholder_width = String.length(placeholder)
 
