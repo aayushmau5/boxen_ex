@@ -3,54 +3,78 @@ defmodule Boxen do
   Documentation for `Boxen`.
   """
 
-  alias Boxen.{Boxes, Helpers, Helpers.WrapText}
+  alias Boxen.{Boxes, Helpers, Helpers.WrapText, Helpers.Validate}
 
   @padding " "
   @borders_width 2
   @newline "\n"
 
-  # @spec boxify(binary, keyword) :: {:ok, binary()} | {:error, binary()}
+  @doc ~S"""
+  Function to boxify a given text.
+
+  Opts:
+  - `:box_type`
+  - `:box`
+  - `:title`
+  - `:title_alignment`
+  """
+  @spec boxify(input_text :: String.t(), opts :: keyword()) ::
+          {:ok, String.t()} | {:error, String.t()}
   def boxify(input_text, opts \\ []) do
-    # TODO: refactor functions(with thought for errors and response)
-    # TODO: suitable error for non-existing box
-    # TODO: return {:ok, text} or {:error, reason} response
     # TODO: add colors: https://hexdocs.pm/elixir/1.14.1/IO.ANSI.html
-    # TODO: ability to change line height(for livebook)
-    # TODO: make livebook compatible(with determining width, etc)
+    # TODO: tests and get library ready(smaller functions, more comments, docs, etc.)
 
     box_type = Keyword.get(opts, :box_type, :single)
     new_box = Keyword.get(opts, :box, nil)
     title = Keyword.get(opts, :title, nil)
     title_alignment = Keyword.get(opts, :title_alignment, :left)
     text_alignment = Keyword.get(opts, :text_alignment, :left)
-    # border_color = Keyword.get(opts, :border_color, :white)
-    # font_color = Keyword.get(opts, :font_color, :white)
-    padding = Keyword.get(opts, :padding, 0) |> set_map_value()
-    margin = Keyword.get(opts, :margin, 0) |> set_map_value()
+    padding = Keyword.get(opts, :padding, 0)
+    margin = Keyword.get(opts, :margin, 0)
     width = Keyword.get(opts, :width, nil)
 
-    {width, margin, title} =
-      determine_dimension(input_text, padding: padding, margin: margin, width: width, title: title)
+    with {:ok, input_text} <- Validate.input_text(input_text),
+         {:ok, new_box} <- Validate.box_input(new_box),
+         {:ok, box_type} <- Validate.box_type(box_type),
+         {:ok, title} <- Validate.title(title),
+         {:ok, title_alignment} <- Validate.title_alignment(title_alignment),
+         {:ok, text_alignment} <- Validate.text_alignment(text_alignment),
+         {:ok, padding} <- Validate.padding(padding),
+         {:ok, margin} <- Validate.margin(margin),
+         {:ok, width} <- Validate.width(width) do
+      padding = set_map_value(padding)
+      margin = set_map_value(margin)
 
-    padding = prevent_padding_overflow(width, padding)
+      {width, margin, title} =
+        determine_dimension(input_text,
+          padding: padding,
+          margin: margin,
+          width: width,
+          title: title
+        )
 
-    input_text = input_text |> Helpers.strip_ansi() |> make_text(width, padding, text_alignment)
+      padding = prevent_padding_overflow(width, padding)
 
-    # Arg `:box` overrides `:box_type`
-    box =
-      if new_box do
-        Boxes.setup_box(new_box)
-      else
-        Boxes.get_box(box_type)
-      end
+      input_text = input_text |> Helpers.strip_ansi() |> make_text(width, padding, text_alignment)
 
-    box_content(box, input_text,
-      width: width,
-      title: title,
-      title_alignment: title_alignment,
-      margin: margin
-    )
-    |> IO.puts()
+      # Arg `:box` overrides `:box_type`
+      box =
+        if new_box do
+          Boxes.setup_box(new_box)
+        else
+          Boxes.get_box(box_type)
+        end
+
+      {:ok,
+       box_content(box, input_text,
+         width: width,
+         title: title,
+         title_alignment: title_alignment,
+         margin: margin
+       )}
+    else
+      error -> error
+    end
   end
 
   defp determine_dimension(text, opts) do
@@ -155,7 +179,7 @@ defmodule Boxen do
         Enum.reduce(lines, [], fn line, acc ->
           aligned_lines =
             line
-            |> WrapText.wrap_line(max)
+            |> WrapText.wrap(max)
             |> Helpers.ansi_align_text(text_alignment)
             |> String.split("\n")
 
@@ -250,15 +274,6 @@ defmodule Boxen do
     end
   end
 
-  defp set_map_value(val) when is_number(val) do
-    %{top: val, right: val * 3, bottom: val, left: val * 3}
-  end
-
-  defp set_map_value(val) when is_map(val) do
-    default_val = %{top: 0, right: 0, bottom: 0, left: 0}
-    Map.merge(default_val, val)
-  end
-
   defp box_content(box, text, opts) do
     content_width = Keyword.get(opts, :width)
     margin = Keyword.get(opts, :margin)
@@ -299,5 +314,14 @@ defmodule Boxen do
       |> Enum.join(line_separator)
 
     Enum.join([top, middle, bottom], line_separator)
+  end
+
+  defp set_map_value(val) when is_number(val) do
+    %{top: val, right: val * 3, bottom: val, left: val * 3}
+  end
+
+  defp set_map_value(val) when is_map(val) do
+    default_val = %{top: 0, right: 0, bottom: 0, left: 0}
+    Map.merge(default_val, val)
   end
 end

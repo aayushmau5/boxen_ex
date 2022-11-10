@@ -94,117 +94,17 @@ defmodule Boxen.Helpers do
 end
 
 defmodule Boxen.Helpers.WrapText do
-  @doc """
-  Word wraps a text with ANSI escape codes
+  @moduledoc """
+  Module for wrapping text
   """
-
   alias Boxen.Helpers
 
-  # def wrap(text, columns) do
-  #   text
-  #   |> String.replace(~r/\r\n/, "\n")
-  #   |> String.split("\n")
-  #   |> Enum.map(fn line -> wrap_line(line, columns) end)
-  #   |> Enum.join("\n")
-  # end
+  @doc """
+  Wraps a given text inside the given max length
 
-  # def wrap_line(line, columns) do
-  #   String.split(line, " ")
-  #   |> Enum.with_index(fn word, index ->
-  #     {index, word}
-  #   end)
-  #   |> Enum.reduce([''], fn {index, word}, rows ->
-  #     word_length = Helpers.text_representation_length(word)
-
-  #     row_length = Helpers.text_representation_length(rows[length(rows) - 1])
-
-  #     # if index != 0 do
-  #     #   if row_length >= columns && ()
-  #     # end
-
-  #     if word_length > columns do
-  #       remaining_columns = columns - row_length
-  #       breaks_starting_this_line = 1 + floor((word_length - remaining_columns - 1) / columns)
-  #       breaks_starting_next_line = floor((word_length - 1) / columns)
-
-  #       if breaks_starting_next_line < breaks_starting_this_line do
-  #         rows ++ ['']
-  #       end
-  #     end
-  #   end)
-  # end
-
-  # defp wrap_word(rows, word, columns) do
-  #   characters = String.split(word)
-
-  # end
-
-  # def wrap(text, max_line_length) do
-  #   text
-  #   |> String.split("\n")
-  #   |> Enum.map(fn line -> wrap_line(line, max_line_length) end)
-  #   |> Enum.join("\n")
-  # end
-
-  # def wrap_line(string, max_line_length) do
-  #   [word | rest] = String.split(string, ~r/\s+/, trim: true)
-
-  #   lines_assemble(rest, max_line_length, Helpers.text_representation_length(word), word, [])
-  #   |> Enum.join("\n")
-  # end
-
-  # defp lines_assemble([], max, word_length, line, acc), do: [line | acc] |> Enum.reverse()
-
-  # defp lines_assemble([word | rest], max, word_length, line, acc) do
-  #   if word_length + 1 + Helpers.text_representation_length(word) > max do
-  #     lines_assemble(rest, max, Helpers.text_representation_length(word), word, [line | acc])
-  #   else
-  #     lines_assemble(
-  #       rest,
-  #       max,
-  #       word_length + 1 + Helpers.text_representation_length(word),
-  #       line <> " " <> word,
-  #       acc
-  #     )
-  #   end
-  # end
-  # def wrap(text, max_line_length) do
-  #   text
-  #   |> String.split("\n")
-  #   |> Enum.map(fn line -> wrap_line(line, max_line_length) end)
-  #   |> Enum.join("\n")
-  # end
-
-  # def wrap_line(string, max_line_length) do
-  #   [word | rest] = String.split(string, ~r/\s+/, trim: true)
-
-  #   lines_assemble(rest, max_line_length, Helpers.text_representation_length(word), word)
-  # end
-
-  # defp lines_assemble([], max, word_length, line) do
-  #   break_line(line, word_length, max)
-  # end
-
-  # defp lines_assemble([next_word | rest], max, word_length, line) do
-  #   break_line(line, word_length, max) <>
-  #     "\n" <>
-  #     lines_assemble(
-  #       rest,
-  #       max,
-  #       Helpers.text_representation_length(next_word),
-  #       next_word
-  #     )
-  # end
-
-  # defp break_line(line, word_length, max) do
-  #   if word_length > max do
-  #     {first, second} = String.split_at(line, max)
-  #     first <> "\n" <> break_line(second, Helpers.text_representation_length(second), max)
-  #   else
-  #     line
-  #   end
-  # end
-
+  This function can take multiple lines separated by `\n`
+  """
+  @spec wrap(text :: String.t(), max_line_length :: non_neg_integer()) :: String.t()
   def wrap(text, max_line_length) do
     text
     |> String.split("\n", trim: true)
@@ -212,7 +112,7 @@ defmodule Boxen.Helpers.WrapText do
     |> Enum.join("\n")
   end
 
-  def wrap_line(string, max_line_length) do
+  defp wrap_line(string, max_line_length) do
     [word | rest] = String.split(string, ~r/\s+/, trim: true)
     break_line(word, Helpers.text_representation_length(word), max_line_length, rest)
   end
@@ -241,4 +141,80 @@ defmodule Boxen.Helpers.WrapText do
       break_line(combined_word, combined_word_length, max, rest)
     end
   end
+end
+
+defmodule Boxen.Helpers.Validate do
+  # Title validation
+  @spec title(title_input :: any()) :: {:ok, nil | String.t()} | {:error, String.t()}
+  def title(title_input) when is_nil(title_input), do: {:ok, title_input}
+  def title(title_input) when is_binary(title_input), do: {:ok, title_input}
+  def title(_), do: {:error, "Title must be nil or a string"}
+
+  # Title alignment validation
+  @spec title_alignment(alignment :: any()) :: {:ok, atom()} | {:error, String.t()}
+  def title_alignment(alignment) when alignment in [:left, :center, :right], do: {:ok, alignment}
+  def title_alignment(_), do: {:error, "Invalid title alignment input"}
+
+  # Input text validation
+  @spec input_text(text :: any()) :: {:ok, String.t()} | {:error, String.t()}
+  def input_text(text) when is_binary(text), do: {:ok, text}
+  def input_text(text) when is_integer(text), do: {:ok, Integer.to_string(text)}
+  def input_text(_), do: {:error, "Invalid input value"}
+
+  # Input text alignment validation
+  @spec text_alignment(alignment :: any()) :: {:ok, atom()} | {:error, String.t()}
+  def text_alignment(alignment) when alignment in [:left, :center, :right], do: {:ok, alignment}
+  def text_alignment(_), do: {:error, "Invalid alignment value"}
+
+  # Padding validation
+  @spec padding(padding_input :: any()) :: {:ok, integer() | map()} | {:error, String.t()}
+  def padding(padding_input) when is_map(padding_input), do: {:ok, padding_input}
+
+  def padding(padding_input) when is_integer(padding_input) do
+    if padding_input >= 0,
+      do: {:ok, padding_input},
+      else: {:error, "Padding must be a positive value"}
+  end
+
+  def padding(_), do: {:error, "Invalid padding value"}
+
+  # Margin validation
+  @spec margin(margin_input :: any()) :: {:ok, integer() | map()} | {:error, String.t()}
+  def margin(margin_input) when is_map(margin_input), do: {:ok, margin_input}
+
+  def margin(margin_input) when is_integer(margin_input) do
+    if margin_input >= 0,
+      do: {:ok, margin_input},
+      else: {:error, "Margin must be a positive value"}
+  end
+
+  def margin(_), do: {:error, "Invalid margin value"}
+
+  # Width validation
+  @spec width(width_input :: any()) :: {:ok, nil | integer()} | {:error, String.t()}
+  def width(width_input) when is_nil(width_input), do: {:ok, width_input}
+
+  def width(width_input) when is_integer(width_input) do
+    if width_input >= 0, do: {:ok, width_input}, else: {:error, "Width must be a positive value"}
+  end
+
+  def width(_), do: {:error, "Invalid margin value"}
+
+  # Box type validation
+  @spec box_type(box_input :: any()) :: {:ok, atom()} | {:error, String.t()}
+  def box_type(box_input) when is_atom(box_input) do
+    if box_input in Boxen.Boxes.get_box_types() do
+      {:ok, box_input}
+    else
+      {:error, "Box type doesn't exist by default."}
+    end
+  end
+
+  def box_type(_), do: {:error, "Invalid box type value"}
+
+  # Box input validation
+  @spec box_input(box :: any()) :: {:ok, nil | map()} | {:error, String.t()}
+  def box_input(box) when is_nil(box), do: {:ok, box}
+  def box_input(box) when is_map(box), do: {:ok, box}
+  def box_input(_), do: {:error, "Invalid box value"}
 end

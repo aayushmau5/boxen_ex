@@ -1,4 +1,16 @@
 defmodule Boxen.Boxes do
+  @box_types [
+    :default,
+    :single,
+    :double,
+    :round,
+    :bold,
+    :single_double,
+    :double_single,
+    :classic,
+    :arrow
+  ]
+
   @boxes [
     default: %Boxen.Box{
       top_left: " ",
@@ -103,13 +115,20 @@ defmodule Boxen.Boxes do
           left: String.t()
         }
 
+  @spec get_box_types() :: list()
+  def get_box_types() do
+    @box_types
+  end
+
   @spec get_box(type :: atom) :: t()
   def get_box(type) when is_atom(type) do
-    Keyword.get(@boxes, type, nil)
+    Keyword.get(@boxes, type, :default)
   end
 
   @spec setup_box(box :: t()) :: t()
   def setup_box(box) when is_map(box) do
     Map.merge(Keyword.get(@boxes, :default), box)
   end
+
+  def setup_box(_), do: {:error, "Invalid box input"}
 end
