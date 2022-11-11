@@ -91,6 +91,18 @@ defmodule Boxen.Helpers do
         text
     end
   end
+
+  @doc """
+  Helper method to print the directly print the result
+  """
+  @spec print_output(result :: {:ok, String.t()} | {:error, String.t()}) ::
+          :ok | {:error, String.t()}
+  def print_output(result) do
+    case result do
+      {:ok, box} -> IO.puts(box)
+      error -> error
+    end
+  end
 end
 
 defmodule Boxen.Helpers.WrapText do

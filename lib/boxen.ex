@@ -17,12 +17,18 @@ defmodule Boxen do
   - `:box`
   - `:title`
   - `:title_alignment`
+  - `:text_alignment`
+  - `:padding`
+  - `:margin`
+  - `:width`
   """
   @spec boxify(input_text :: String.t(), opts :: keyword()) ::
           {:ok, String.t()} | {:error, String.t()}
   def boxify(input_text, opts \\ []) do
     # TODO: add colors: https://hexdocs.pm/elixir/1.14.1/IO.ANSI.html
-    # TODO: tests and get library ready(smaller functions, more comments, docs, etc.)
+    ## Overall Text color
+    ## need to think about finegrained text coloring(perhaps input_text already contains coloring of some sort?)
+    # TODO: tests and get library ready(smaller functions, more comments, docs, licensing, readme, etc.)
 
     box_type = Keyword.get(opts, :box_type, :single)
     new_box = Keyword.get(opts, :box, nil)
@@ -32,6 +38,7 @@ defmodule Boxen do
     padding = Keyword.get(opts, :padding, 0)
     margin = Keyword.get(opts, :margin, 0)
     width = Keyword.get(opts, :width, nil)
+    border_color = Keyword.get(opts, :border_color, nil)
 
     with {:ok, input_text} <- Validate.input_text(input_text),
          {:ok, new_box} <- Validate.box_input(new_box),
@@ -63,6 +70,14 @@ defmodule Boxen do
           Boxes.setup_box(new_box)
         else
           Boxes.get_box(box_type)
+        end
+
+      box =
+        if border_color do
+          IO.inspect(border_color)
+          apply_border_color(box, border_color)
+        else
+          box
         end
 
       {:ok,
@@ -314,6 +329,19 @@ defmodule Boxen do
       |> Enum.join(line_separator)
 
     Enum.join([top, middle, bottom], line_separator)
+  end
+
+  defp apply_border_color(box, color) do
+    %Boxen.Box{
+      top_left: color <> box.top_left <> IO.ANSI.reset(),
+      top: color <> box.top <> IO.ANSI.reset(),
+      top_right: color <> box.top_right <> IO.ANSI.reset(),
+      right: color <> box.right <> IO.ANSI.reset(),
+      bottom_right: color <> box.bottom_right <> IO.ANSI.reset(),
+      bottom: color <> box.bottom <> IO.ANSI.reset(),
+      bottom_left: color <> box.bottom_left <> IO.ANSI.reset(),
+      left: color <> box.left <> IO.ANSI.reset()
+    }
   end
 
   defp set_map_value(val) when is_number(val) do
