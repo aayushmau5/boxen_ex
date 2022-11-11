@@ -25,9 +25,7 @@ defmodule Boxen do
   @spec boxify(input_text :: String.t(), opts :: keyword()) ::
           {:ok, String.t()} | {:error, String.t()}
   def boxify(input_text, opts \\ []) do
-    # TODO: add colors: https://hexdocs.pm/elixir/1.14.1/IO.ANSI.html
-    ## Overall Text color
-    ## need to think about finegrained text coloring(perhaps input_text already contains coloring of some sort?)
+    # TODO: finegrained text coloring(perhaps input_text already contains coloring of some sort?)
     # TODO: tests and get library ready(smaller functions, more comments, docs, licensing, readme, etc.)
 
     box_type = Keyword.get(opts, :box_type, :single)
@@ -39,6 +37,7 @@ defmodule Boxen do
     margin = Keyword.get(opts, :margin, 0)
     width = Keyword.get(opts, :width, nil)
     border_color = Keyword.get(opts, :border_color, nil)
+    text_color = Keyword.get(opts, :text_color, nil)
 
     with {:ok, input_text} <- Validate.input_text(input_text),
          {:ok, new_box} <- Validate.box_input(new_box),
@@ -48,7 +47,10 @@ defmodule Boxen do
          {:ok, text_alignment} <- Validate.text_alignment(text_alignment),
          {:ok, padding} <- Validate.padding(padding),
          {:ok, margin} <- Validate.margin(margin),
-         {:ok, width} <- Validate.width(width) do
+         {:ok, width} <- Validate.width(width),
+         {:ok, border_color} <-
+           Validate.border_color(border_color),
+         {:ok, text_color} <- Validate.text_color(text_color) do
       padding = set_map_value(padding)
       margin = set_map_value(margin)
 
@@ -62,7 +64,11 @@ defmodule Boxen do
 
       padding = prevent_padding_overflow(width, padding)
 
-      input_text = input_text |> Helpers.strip_ansi() |> make_text(width, padding, text_alignment)
+      input_text =
+        input_text
+        |> Helpers.strip_ansi()
+        |> apply_text_color(text_color)
+        |> make_text(width, padding, text_alignment)
 
       # Arg `:box` overrides `:box_type`
       box =
@@ -74,7 +80,6 @@ defmodule Boxen do
 
       box =
         if border_color do
-          IO.inspect(border_color)
           apply_border_color(box, border_color)
         else
           box
@@ -342,6 +347,14 @@ defmodule Boxen do
       bottom_left: color <> box.bottom_left <> IO.ANSI.reset(),
       left: color <> box.left <> IO.ANSI.reset()
     }
+  end
+
+  defp apply_text_color(text, color) do
+    if color do
+      color <> text <> IO.ANSI.reset()
+    else
+      text
+    end
   end
 
   defp set_map_value(val) when is_number(val) do

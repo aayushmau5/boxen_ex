@@ -229,4 +229,16 @@ defmodule Boxen.Helpers.Validate do
   def box_input(box) when is_nil(box), do: {:ok, box}
   def box_input(box) when is_map(box), do: {:ok, box}
   def box_input(_), do: {:error, "Invalid box value"}
+
+  # Border color validation
+  @spec border_color(color :: any()) :: {:ok, nil | String.t()} | {:error, String.t()}
+  def border_color(color) when is_nil(color), do: {:ok, color}
+  def border_color(color) when is_binary(color), do: {:ok, color}
+  def border_color(_), do: {:error, "Invalid border color value"}
+
+  # Text color validation
+  @spec text_color(color :: any()) :: {:ok, nil | String.t()} | {:error, String.t()}
+  def text_color(color) when is_nil(color), do: {:ok, color}
+  def text_color(color) when is_binary(color), do: {:ok, color}
+  def text_color(_), do: {:error, "Invalid text color value"}
 end
