@@ -3,7 +3,6 @@ defmodule Boxen do
   Documentation for `Boxen`.
   """
 
-  alias Mix.Tasks.Help
   alias Boxen.{Boxes, Helpers, Helpers.WrapText, Helpers.Validate}
 
   @padding " "
