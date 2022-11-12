@@ -9,8 +9,7 @@ defmodule Boxen.Helpers do
     # TODO: fix this function
     # TODO: handle asian characters
     # TODO: remove control characters
-    text = text |> strip_ansi() |> remove_emoji()
-    String.length(text)
+    text |> strip_ansi() |> remove_emoji() |> String.length()
   end
 
   @doc """

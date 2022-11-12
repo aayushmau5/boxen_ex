@@ -3,6 +3,7 @@ defmodule Boxen do
   Documentation for `Boxen`.
   """
 
+  alias Mix.Tasks.Help
   alias Boxen.{Boxes, Helpers, Helpers.WrapText, Helpers.Validate}
 
   @padding " "
@@ -25,7 +26,7 @@ defmodule Boxen do
   @spec boxify(input_text :: String.t(), opts :: keyword()) ::
           {:ok, String.t()} | {:error, String.t()}
   def boxify(input_text, opts \\ []) do
-    # TODO: finegrained text coloring(perhaps input_text already contains coloring of some sort?)
+    # TODO: Fixing wrapping and escape text functions and text representation length
     # TODO: tests and get library ready(smaller functions, more comments, docs, licensing, readme, etc.)
 
     box_type = Keyword.get(opts, :box_type, :single)
@@ -66,7 +67,6 @@ defmodule Boxen do
 
       input_text =
         input_text
-        |> Helpers.strip_ansi()
         |> apply_text_color(text_color)
         |> make_text(width, padding, text_alignment)
 
@@ -351,6 +351,8 @@ defmodule Boxen do
 
   defp apply_text_color(text, color) do
     if color do
+      # text_color overrides colors already present in text
+      text = Helpers.strip_ansi(text)
       color <> text <> IO.ANSI.reset()
     else
       text
