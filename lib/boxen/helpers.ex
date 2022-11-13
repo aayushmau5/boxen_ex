@@ -6,10 +6,19 @@ defmodule Boxen.Helpers do
   @spec text_representation_length(text :: String.t()) :: non_neg_integer()
   def text_representation_length(text) do
     # https://github.com/sindresorhus/string-width
-    # TODO: fix this function
-    # TODO: handle asian characters
     # TODO: remove control characters
-    text |> strip_ansi() |> remove_emoji() |> String.length()
+    text
+    |> strip_ansi()
+    |> remove_emoji()
+    |> String.split("")
+    |> Enum.reduce(0, fn
+      # TODO: use regex and control characters match
+      "\n", width ->
+        width
+
+      char, width ->
+        width + String.length(char)
+    end)
   end
 
   @doc """
@@ -54,7 +63,7 @@ defmodule Boxen.Helpers do
   def get_terminal_columns() do
     case :io.columns() do
       {:ok, width} -> width
-      # default 80 columns
+      # default 120 columns
       {:error, _} -> 120
     end
   end

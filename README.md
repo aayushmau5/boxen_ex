@@ -1,6 +1,8 @@
 # Boxen
 
-**TODO: Add description**
+![cover](https://user-images.githubusercontent.com/54525741/201495303-2da20713-00a3-438f-bd2b-1a1126f2893d.png)
+
+Port of [boxen](https://github.com/sindresorhus/boxen) library for elixir.
 
 ## Installation
 
@@ -19,3 +21,4 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/boxen>.
 
+## Acknowledgments

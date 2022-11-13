@@ -26,7 +26,7 @@ defmodule Boxen do
           {:ok, String.t()} | {:error, String.t()}
   def boxify(input_text, opts \\ []) do
     # TODO: Fixing wrapping and escape text functions and text representation length
-    # TODO: tests and get library ready(smaller functions, more comments, docs, licensing, readme, etc.)
+    # TODO: tests and get library ready(smaller functions, more comments, docs, readme, etc.)
 
     box_type = Keyword.get(opts, :box_type, :single)
     new_box = Keyword.get(opts, :box, nil)
@@ -89,7 +89,8 @@ defmodule Boxen do
          width: width,
          title: title,
          title_alignment: title_alignment,
-         margin: margin
+         margin: margin,
+         border_color: border_color
        )}
     else
       error -> error
@@ -106,8 +107,14 @@ defmodule Boxen do
     width_override? = width != nil
     max_width = columns - margin.left - margin.right - @borders_width
 
+    # widest =
+    #   Helpers.widest_line(WrapText.wrap(Helpers.strip_ansi(text), columns - @borders_width)) +
+    #     padding.left +
+    #     padding.right
+
     widest =
-      Helpers.widest_line(WrapText.wrap(text, columns - @borders_width)) + padding.left +
+      Helpers.widest_line(Boxen.Wrap.wrap(Helpers.strip_ansi(text), columns - @borders_width)) +
+        padding.left +
         padding.right
 
     title =
@@ -150,19 +157,22 @@ defmodule Boxen do
     {width, margin_change, title}
   end
 
-  defp make_title(title, placeholder, alignment) do
+  defp make_title(title, placeholder, alignment, border_color) do
     title_width = Helpers.text_representation_length(title)
+    # removes ANSI color codes from placeholder
+    placeholder = Helpers.strip_ansi(placeholder)
     placeholder_width = String.length(placeholder)
+    placeholder = String.slice(placeholder, title_width, placeholder_width)
+    border_color = if border_color, do: border_color, else: ""
 
     case alignment do
       :left ->
-        title <> String.slice(placeholder, title_width, placeholder_width)
+        title <> border_color <> placeholder <> IO.ANSI.reset()
 
       :right ->
-        String.slice(placeholder, title_width, placeholder_width) <> title
+        border_color <> placeholder <> IO.ANSI.reset() <> title
 
       _ ->
-        placeholder = String.slice(placeholder, title_width, placeholder_width)
         placeholder_width = String.length(placeholder)
 
         if rem(placeholder_width, 2) == 1 do
@@ -173,7 +183,12 @@ defmodule Boxen do
               placeholder_width
             )
 
-          String.slice(placeholder, 1, placeholder_width) <> title <> placeholder
+          left_placeholder =
+            border_color <> String.slice(placeholder, 1, placeholder_width) <> IO.ANSI.reset()
+
+          right_placeholder = border_color <> placeholder <> IO.ANSI.reset()
+
+          left_placeholder <> title <> right_placeholder
         else
           placeholder =
             String.slice(
@@ -181,6 +196,8 @@ defmodule Boxen do
               div(placeholder_width, 2),
               placeholder_width
             )
+
+          placeholder = border_color <> placeholder <> IO.ANSI.reset()
 
           placeholder <> title <> placeholder
         end
@@ -198,7 +215,8 @@ defmodule Boxen do
         Enum.reduce(lines, [], fn line, acc ->
           aligned_lines =
             line
-            |> WrapText.wrap(max)
+            # |> WrapText.wrap(max)
+            |> Boxen.Wrap.wrap(max)
             |> Helpers.ansi_align_text(text_alignment)
             |> String.split("\n")
 
@@ -298,6 +316,7 @@ defmodule Boxen do
     margin = Keyword.get(opts, :margin)
     title = Keyword.get(opts, :title)
     title_alignment = Keyword.get(opts, :title_alignment)
+    border_color = Keyword.get(opts, :border_color)
     columns = Helpers.get_terminal_columns()
 
     margin_top = String.duplicate(@newline, margin.top)
@@ -307,7 +326,7 @@ defmodule Boxen do
     title =
       if title do
         placeholder = String.duplicate(box.top, content_width)
-        make_title(title, placeholder, title_alignment)
+        make_title(title, placeholder, title_alignment, border_color)
       else
         String.duplicate(box.top, content_width)
       end
