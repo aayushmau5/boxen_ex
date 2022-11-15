@@ -3,7 +3,7 @@ defmodule Boxen do
   Documentation for `Boxen`.
   """
 
-  alias Boxen.{Boxes, Helpers, Helpers.WrapText, Helpers.Validate}
+  alias Boxen.{Boxes, Helpers, WrapText, Helpers.Validate}
 
   @padding " "
   @borders_width 2
@@ -21,11 +21,18 @@ defmodule Boxen do
   - `:padding`
   - `:margin`
   - `:width`
+  - `:border_color`
+  - `:text_color`
+      
+  Example:
+  
+  Simple: Boxen.boxify("Hello, world")
+  
+  With title: Boxen.boxify("Hello, world", title: "Message")
   """
   @spec boxify(input_text :: String.t(), opts :: keyword()) ::
           {:ok, String.t()} | {:error, String.t()}
   def boxify(input_text, opts \\ []) do
-    # TODO: Fixing wrapping and escape text functions and text representation length
     # TODO: tests and get library ready(smaller functions, more comments, docs, readme, etc.)
 
     box_type = Keyword.get(opts, :box_type, :single)
@@ -107,13 +114,8 @@ defmodule Boxen do
     width_override? = width != nil
     max_width = columns - margin.left - margin.right - @borders_width
 
-    # widest =
-    #   Helpers.widest_line(WrapText.wrap(Helpers.strip_ansi(text), columns - @borders_width)) +
-    #     padding.left +
-    #     padding.right
-
     widest =
-      Helpers.widest_line(Boxen.Wrap.wrap(Helpers.strip_ansi(text), columns - @borders_width)) +
+      Helpers.widest_line(WrapText.wrap(Helpers.strip_ansi(text), columns - @borders_width)) +
         padding.left +
         padding.right
 
@@ -131,9 +133,7 @@ defmodule Boxen do
       end
 
     title_width = if title, do: Helpers.text_representation_length(title), else: 0
-
     width = if width_override? && title_width > widest, do: title_width, else: width
-
     width = if width_override?, do: width, else: widest
 
     margin_change =
@@ -163,14 +163,15 @@ defmodule Boxen do
     placeholder = Helpers.strip_ansi(placeholder)
     placeholder_width = String.length(placeholder)
     placeholder = String.slice(placeholder, title_width, placeholder_width)
+    reset = if border_color, do: IO.ANSI.reset(), else: ""
     border_color = if border_color, do: border_color, else: ""
 
     case alignment do
       :left ->
-        title <> border_color <> placeholder <> IO.ANSI.reset()
+        title <> border_color <> placeholder <> reset
 
       :right ->
-        border_color <> placeholder <> IO.ANSI.reset() <> title
+        border_color <> placeholder <> reset <> title
 
       _ ->
         placeholder_width = String.length(placeholder)
@@ -184,9 +185,9 @@ defmodule Boxen do
             )
 
           left_placeholder =
-            border_color <> String.slice(placeholder, 1, placeholder_width) <> IO.ANSI.reset()
+            border_color <> String.slice(placeholder, 1, placeholder_width) <> reset
 
-          right_placeholder = border_color <> placeholder <> IO.ANSI.reset()
+          right_placeholder = border_color <> placeholder <> reset
 
           left_placeholder <> title <> right_placeholder
         else
@@ -197,7 +198,7 @@ defmodule Boxen do
               placeholder_width
             )
 
-          placeholder = border_color <> placeholder <> IO.ANSI.reset()
+          placeholder = border_color <> placeholder <> reset
 
           placeholder <> title <> placeholder
         end
@@ -215,8 +216,7 @@ defmodule Boxen do
         Enum.reduce(lines, [], fn line, acc ->
           aligned_lines =
             line
-            # |> WrapText.wrap(max)
-            |> Boxen.Wrap.wrap(max)
+            |> WrapText.wrap(max)
             |> Helpers.ansi_align_text(text_alignment)
             |> String.split("\n")
 

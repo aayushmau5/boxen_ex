@@ -113,56 +113,6 @@ defmodule Boxen.Helpers do
   end
 end
 
-defmodule Boxen.Helpers.WrapText do
-  @moduledoc """
-  Module for wrapping text
-  """
-  alias Boxen.Helpers
-
-  @doc """
-  Wraps a given text inside the given max length
-
-  This function can take multiple lines separated by `\n`
-  """
-  @spec wrap(text :: String.t(), max_line_length :: non_neg_integer()) :: String.t()
-  def wrap(text, max_line_length) do
-    text
-    |> String.split("\n", trim: true)
-    |> Enum.map(fn line -> wrap_line(line, max_line_length) end)
-    |> Enum.join("\n")
-  end
-
-  defp wrap_line(string, max_line_length) do
-    [word | rest] = String.split(string, ~r/\s+/, trim: true)
-    break_line(word, Helpers.text_representation_length(word), max_line_length, rest)
-  end
-
-  defp break_line(word, word_length, max, []) do
-    if word_length > max do
-      {first, second} = String.split_at(word, max)
-      first <> "\n" <> break_line(second, Helpers.text_representation_length(second), max, [])
-    else
-      word
-    end
-  end
-
-  defp break_line(word, word_length, max, next_words) do
-    if word_length > max do
-      {first, second} = String.split_at(word, max)
-
-      first <>
-        "\n" <> break_line(second, Helpers.text_representation_length(second), max, next_words)
-    else
-      [next_word | rest] = next_words
-      next_word_length = Helpers.text_representation_length(next_word)
-      combined_word_length = word_length + 1 + next_word_length
-      combined_word = word <> " " <> next_word
-
-      break_line(combined_word, combined_word_length, max, rest)
-    end
-  end
-end
-
 defmodule Boxen.Helpers.Validate do
   # Title validation
   @spec title(title_input :: any()) :: {:ok, nil | String.t()} | {:error, String.t()}

@@ -1,6 +1,6 @@
-defmodule Boxen.Wrap do
+defmodule Boxen.WrapText do
   @moduledoc """
-  Module for wrapping text
+  Helper module for wrapping text(with ANSI code)
   """
   alias Boxen.Helpers
 
@@ -10,10 +10,10 @@ defmodule Boxen.Wrap do
   @ansi_csi "["
   @ansi_osc "]"
   @ansi_sgr_terminator "m"
-  @ansi_escape_link "]8;;"
+  @ansi_escape_link "#{@ansi_osc}8;;"
 
   @doc """
-  Wraps a given text inside the given max length
+  Wraps a given text inside the given length
 
   This function can take multiple lines separated by `\n`
   """

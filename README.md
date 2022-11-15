@@ -22,3 +22,5 @@ and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/boxen>.
 
 ## Acknowledgments
+
+Thanks to [Sindre Sorhus]() and the contributors of boxen library. This library is inspired by boxen, and as such, almost all original functions are written in elixir.
