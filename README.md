@@ -52,13 +52,13 @@ Boxen.boxify("hello world", title: "Something")
 
 Adds padding inside the box.
 
-Type: `Map | integer`
+Type: `Map` | `integer`. Default: 0
 
 For map, the map should contain `top`, `bottom`, `left` and `right` value as atom.
 
 Example
 
-```elixir:
+```elixir
 # Integer
 Boxen.boxify("hello world", padding: 1)
 
@@ -70,9 +70,9 @@ It is not necessary to pass all the options inside the map. You can just pass `%
 
 ### margin
 
-Adds margin outside the box.
+Adds margin outside the box. Default: 0
 
-Type: `Map | integer`
+Type: `Map` | `integer`
 
 For map, the map should contain `top`, `bottom`, `left` and `right` value as atom.
 
@@ -244,7 +244,7 @@ If you want more granular control over color, you can provide your own text with
 Example
 
 ```elixir
-text = IO.ANSI.format([:blue, "hello, ", :cyan, "elixir"]) |> IO.chardata_to_string #=> \e[34mhello, \e[36melixir\e[0m"
+text = IO.ANSI.format([:blue, "hello, ", :cyan, "elixir"]) |> IO.chardata_to_string #=> "\e[34mhello, \e[36melixir\e[0m"
 
 Boxen.boxify(text)
 ```
