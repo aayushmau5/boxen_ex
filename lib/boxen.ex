@@ -12,7 +12,7 @@ defmodule Boxen do
   @doc ~S"""
   Function to boxify a given text.
 
-  Opts:
+  Options:
   - `:box_type`
   - `:box`
   - `:title`
@@ -23,16 +23,18 @@ defmodule Boxen do
   - `:width`
   - `:border_color`
   - `:text_color`
-      
+
   Example:
-  
+
   Simple: Boxen.boxify("Hello, world")
-  
+
   With title: Boxen.boxify("Hello, world", title: "Message")
   """
   @spec boxify(input_text :: String.t(), opts :: keyword()) ::
           {:ok, String.t()} | {:error, String.t()}
   def boxify(input_text, opts \\ []) do
+    # TODO: merge box_type and box to have a single option of `box`
+    # TODO: think about replacing if else blocks with pattern matched functions
     # TODO: tests and get library ready(smaller functions, more comments, docs, readme, etc.)
 
     box_type = Keyword.get(opts, :box_type, :single)
@@ -133,8 +135,8 @@ defmodule Boxen do
       end
 
     title_width = if title, do: Helpers.text_representation_length(title), else: 0
-    width = if width_override? && title_width > widest, do: title_width, else: width
-    width = if width_override?, do: width, else: widest
+    width = if !width_override? && title_width > widest, do: title_width, else: width
+    width = if width, do: width, else: widest
 
     margin_change =
       if !width_override? && (margin.left != 0 && margin.right != 0) && width > max_width do

@@ -1,6 +1,6 @@
 defmodule Boxen.Boxes do
   @box_types [
-    :default,
+    :fallback,
     :single,
     :double,
     :round,
@@ -12,7 +12,7 @@ defmodule Boxen.Boxes do
   ]
 
   @boxes [
-    default: %Boxen.Box{
+    fallback: %Boxen.Box{
       top_left: " ",
       top: " ",
       top_right: " ",
@@ -122,13 +122,11 @@ defmodule Boxen.Boxes do
 
   @spec get_box(type :: atom) :: t()
   def get_box(type) when is_atom(type) do
-    Keyword.get(@boxes, type, :default)
+    Keyword.get(@boxes, type, :fallback)
   end
 
   @spec setup_box(box :: t()) :: t()
-  def setup_box(box) when is_map(box) do
-    Map.merge(Keyword.get(@boxes, :default), box)
+  def setup_box(box) do
+    Map.merge(Keyword.get(@boxes, :fallback), box)
   end
-
-  def setup_box(_), do: {:error, "Invalid box input"}
 end

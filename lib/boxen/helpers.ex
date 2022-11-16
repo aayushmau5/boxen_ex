@@ -165,7 +165,9 @@ defmodule Boxen.Helpers.Validate do
   def width(width_input) when is_nil(width_input), do: {:ok, width_input}
 
   def width(width_input) when is_integer(width_input) do
-    if width_input >= 0, do: {:ok, width_input}, else: {:error, "Width must be a positive value"}
+    if width_input > 0,
+      do: {:ok, width_input},
+      else: {:error, "Width must be greater than 0"}
   end
 
   def width(_), do: {:error, "Invalid margin value"}
