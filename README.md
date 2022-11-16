@@ -251,4 +251,4 @@ Boxen.boxify(text)
 
 ## Acknowledgments
 
-Thanks to [Sindre Sorhus](https://github.com/sindresorhus) and the contributors of [boxen](https://github.com/sindresorhus/boxen) library. This library is inspired by boxen, and as such, almost all original functions are written in elixir.
+Thanks to [Sindre Sorhus](https://github.com/sindresorhus) and the contributors of [boxen](https://github.com/sindresorhus/boxen) library. This library is inspired by boxen, and as such, almost all functions are re-written in elixir(with some minor changes here and there).
