@@ -52,7 +52,7 @@ Boxen.boxify("hello world", title: "Something")
 
 Adds padding inside the box.
 
-Type: `Map` | `integer`. Default: 0
+Type: `map` | `integer`. Default: 0
 
 For map, the map should contain `top`, `bottom`, `left` and `right` value as atom.
 
@@ -72,7 +72,7 @@ It is not necessary to pass all the options inside the map. You can just pass `%
 
 Adds margin outside the box. Default: 0
 
-Type: `Map` | `integer`
+Type: `map` | `integer`
 
 For map, the map should contain `top`, `bottom`, `left` and `right` value as atom.
 
@@ -116,13 +116,13 @@ Example:
 Boxen.boxify("hello world", title: "Message", title_alignment: :center)
 ```
 
-### box_type
+### box
 
-The box type to show the text content in. Default is `:single`. Taken directly from Boxen library.
+The box type to show the text content in. Default is `:single`.
 
-Type: `atom`
+Type: `atom` | `map`
 
-Value:
+Value(taken directly from Boxen library):
 
 - `:fallback`: Just blank space
 - `:single`
@@ -189,9 +189,32 @@ Value:
   ↗↑↑↑↖
   ```
 
-### box
+Example:
 
-You can also add your own box through this option.
+```elixir
+Boxen.boxify("Hello world", box: :double)
+```
+
+You can also add your own box through this option. Pass a map containing the following data:
+
+```
+top_left,
+top,
+top_right,
+right,
+bottom_right,
+bottom,
+bottom_left,
+left
+```
+
+It is not necessary to pass all the options inside the map. You can just pass `%{top: 1, bottom: 1}`, and the rest will have the default to blank spaces.
+
+Example:
+
+```elixir
+Boxen.boxify("Hello world", box: %{top_left: "->", ....})
+```
 
 ### width
 
@@ -241,7 +264,7 @@ Boxen.boxify("hello world", text_color: blue)
 
 If you want more granular control over color, you can provide your own text with ANSI escape sequence embedded in it. Same applies for title.
 
-Example
+Example:
 
 ```elixir
 text = IO.ANSI.format([:blue, "hello, ", :cyan, "elixir"]) |> IO.chardata_to_string #=> "\e[34mhello, \e[36melixir\e[0m"

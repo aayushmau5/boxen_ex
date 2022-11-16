@@ -33,12 +33,10 @@ defmodule Boxen do
   @spec boxify(input_text :: String.t(), opts :: keyword()) ::
           {:ok, String.t()} | {:error, String.t()}
   def boxify(input_text, opts \\ []) do
-    # TODO: merge box_type and box to have a single option of `box`
     # TODO: think about replacing if else blocks with pattern matched functions
-    # TODO: tests and get library ready(smaller functions, more comments, docs, readme, etc.)
+    # TODO: tests and docs
 
-    box_type = Keyword.get(opts, :box_type, :single)
-    new_box = Keyword.get(opts, :box, nil)
+    box = Keyword.get(opts, :box, :single)
     title = Keyword.get(opts, :title, nil)
     title_alignment = Keyword.get(opts, :title_alignment, :left)
     text_alignment = Keyword.get(opts, :text_alignment, :left)
@@ -49,8 +47,7 @@ defmodule Boxen do
     text_color = Keyword.get(opts, :text_color, nil)
 
     with {:ok, input_text} <- Validate.input_text(input_text),
-         {:ok, new_box} <- Validate.box_input(new_box),
-         {:ok, box_type} <- Validate.box_type(box_type),
+         {:ok, box} <- Validate.box(box),
          {:ok, title} <- Validate.title(title),
          {:ok, title_alignment} <- Validate.title_alignment(title_alignment),
          {:ok, text_alignment} <- Validate.text_alignment(text_alignment),
@@ -78,13 +75,7 @@ defmodule Boxen do
         |> apply_text_color(text_color)
         |> make_text(width, padding, text_alignment)
 
-      # Arg `:box` overrides `:box_type`
-      box =
-        if new_box do
-          Boxes.setup_box(new_box)
-        else
-          Boxes.get_box(box_type)
-        end
+      box = if is_map(box), do: Boxes.setup_box(box), else: Boxes.get_box(box)
 
       box =
         if border_color do

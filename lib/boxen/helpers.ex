@@ -173,8 +173,8 @@ defmodule Boxen.Helpers.Validate do
   def width(_), do: {:error, "Invalid margin value"}
 
   # Box type validation
-  @spec box_type(box_input :: any()) :: {:ok, atom()} | {:error, String.t()}
-  def box_type(box_input) when is_atom(box_input) do
+  @spec box(box_input :: any()) :: {:ok, atom() | map()} | {:error, String.t()}
+  def box(box_input) when is_atom(box_input) do
     if box_input in Boxen.Boxes.get_box_types() do
       {:ok, box_input}
     else
@@ -182,13 +182,9 @@ defmodule Boxen.Helpers.Validate do
     end
   end
 
-  def box_type(_), do: {:error, "Invalid box type value"}
+  def box(box_input) when is_map(box_input), do: {:ok, box_input}
 
-  # Box input validation
-  @spec box_input(box :: any()) :: {:ok, nil | map()} | {:error, String.t()}
-  def box_input(box) when is_nil(box), do: {:ok, box}
-  def box_input(box) when is_map(box), do: {:ok, box}
-  def box_input(_), do: {:error, "Invalid box value"}
+  def box(_), do: {:error, "Invalid box type value"}
 
   # Border color validation
   @spec border_color(color :: any()) :: {:ok, nil | String.t()} | {:error, String.t()}
