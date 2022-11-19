@@ -1,9 +1,6 @@
 defmodule BoxenTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Boxen
-
-  # randomText =
-  #  "lewb{+^PN_6-l 8eK2eqB:jn^YFgGl;wuT)mdA9TZlf 9}?X#P49`x\"@+nLx:BH5p{5_b`S\'E8\0{A0l\"(62`TIf(z8n2arEY~]y|bk,6,FYf~rGY*Xfa00q{=fdm=4.zVf6#\'|3S!`pJ3 6y02]nj2o4?-`1v$mudH?Wbw3fZ]a+aE\'\'P4Q(6:NHBry)L_&/7v]0<!7<kw~gLc.)\'ajS>\0~y8PZ*|-BRY&m%UaCe\'3A,N?8&wbOP}*.O<47rnPzxO=4\"*|[%A):;E)Z6!V&x!1*OprW-*+q<F$6|864~1HmYX@J#Nl1j1`!$Y~j^`j;PB2qpe[_;.+vJGnE3) yo&5qRI~WHxK~r%+\'P>Up&=P6M<kDdpSL#<Ur/[NN0qI3dFEEy|>_VGx0O/VOvPEez:7C58a^.N,\"Rxc|a6C[i$3QC_)~x!wd+ZMtYsGF&?"
 
   test "without any args" do
     assert Boxen.boxify("hello, elixir") ==
@@ -27,5 +24,95 @@ defmodule BoxenTest do
 
   test "with wrong title type" do
     assert Boxen.boxify("hello, elixir", title: 2) == {:error, "Title must be nil or a string"}
+  end
+
+  test "with padding as integer value" do
+    assert Boxen.boxify("hello, elixir", padding: 1) ==
+             {:ok,
+              "┌───────────────────┐\n│                   │\n│   hello, elixir   │\n│                   │\n└───────────────────┘"}
+  end
+
+  test "with padding as map value" do
+    assert Boxen.boxify("hello, elixir", padding: %{top: 1, bottom: 2, left: 0, right: 1}) ==
+             {:ok,
+              "┌──────────────┐\n│              │\n│hello, elixir │\n│              │\n│              │\n└──────────────┘"}
+  end
+
+  test "with margin as integer value" do
+    assert Boxen.boxify("hello, elixir", margin: 1) ==
+             {:ok, "\n   ┌─────────────┐\n   │hello, elixir│\n   └─────────────┘\n"}
+  end
+
+  test "with margin as map value" do
+    assert Boxen.boxify("hello, elixir", margin: %{top: 1, bottom: 2, left: 0, right: 1}) ==
+             {:ok, "\n┌─────────────┐\n│hello, elixir│\n└─────────────┘\n\n"}
+  end
+
+  test "with width > text width" do
+    assert Boxen.boxify("hello, elixir", width: 80) ==
+             {:ok,
+              "┌────────────────────────────────────────────────────────────────────────────────┐\n│hello, elixir                                                                   │\n└────────────────────────────────────────────────────────────────────────────────┘"}
+  end
+
+  test "with width < text width" do
+    assert Boxen.boxify("hello, elixir", width: 4) ==
+             {:ok, "┌────┐\n│hell│\n│o,  │\n│elix│\n│ir  │\n└────┘"}
+  end
+
+  test "with width == 1" do
+    assert Boxen.boxify("hello, elixir", width: 1) ==
+             {:ok, "┌─┐\n│h│\n│e│\n│l│\n│l│\n│o│\n│,│\n│e│\n│l│\n│i│\n│x│\n│i│\n│r│\n└─┘"}
+  end
+
+  test "with rounded box" do
+    assert Boxen.boxify("hello, elixir", box: :round) ==
+             {:ok, "╭─────────────╮\n│hello, elixir│\n╰─────────────╯"}
+  end
+
+  test "with custom box" do
+    assert Boxen.boxify("hello, elixir",
+             box: %{
+               top_left: "|",
+               top: "|",
+               top_right: "|",
+               right: "|",
+               bottom_right: "|",
+               bottom: "|",
+               bottom_left: "|",
+               left: "|"
+             }
+           ) ==
+             {:ok, "|||||||||||||||\n|hello, elixir|\n|||||||||||||||"}
+  end
+
+  test "with border color" do
+    red = IO.ANSI.red()
+
+    assert Boxen.boxify("hello, elixir", border_color: red) ==
+             {:ok,
+              "\e[31m┌\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m┐\e[0m\n\e[31m│\e[0mhello, elixir\e[31m│\e[0m\n\e[31m└\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m┘\e[0m"}
+  end
+
+  test "with text color" do
+    blue = IO.ANSI.blue()
+
+    assert Boxen.boxify("hello, elixir", text_color: blue) ==
+             {:ok, "┌─────────────┐\n│\e[34mhello, elixir\e[0m│\n└─────────────┘"}
+  end
+
+  test "with text and border_color color" do
+    red = IO.ANSI.red()
+    blue = IO.ANSI.blue()
+
+    assert Boxen.boxify("hello, elixir", text_color: blue, border_color: red) ==
+             {:ok,
+              "\e[31m┌\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m┐\e[0m\n\e[31m│\e[0m\e[34mhello, elixir\e[0m\e[31m│\e[0m\n\e[31m└\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m─\e[0m\e[31m┘\e[0m"}
+  end
+
+  test "with custom text color" do
+    text = IO.ANSI.format([:red, "Hello, ", :blue, "elixir"]) |> IO.chardata_to_string()
+
+    assert Boxen.boxify(text) ==
+             {:ok, "┌─────────────┐\n│\e[31mHello, \e[34melixir\e[0m│\n└─────────────┘"}
   end
 end

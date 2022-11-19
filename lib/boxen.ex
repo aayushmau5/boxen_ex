@@ -9,32 +9,36 @@ defmodule Boxen do
   @borders_width 2
   @newline "\n"
 
+  @type opts() :: [
+          box: atom() | map(),
+          title: String.t(),
+          title_alignment: :left | :right | :center,
+          text_alignment: :left | :right | :center,
+          padding: integer(),
+          margin: integer(),
+          width: non_neg_integer(),
+          border_color: String.t(),
+          text_color: String.t()
+        ]
+
   @doc ~S"""
-  Function to boxify a given text.
+   Function to boxify a given text.
 
-  Options:
-  - `:box_type`
-  - `:box`
-  - `:title`
-  - `:title_alignment`
-  - `:text_alignment`
-  - `:padding`
-  - `:margin`
-  - `:width`
-  - `:border_color`
-  - `:text_color`
-
-  Example:
-
-  Simple: Boxen.boxify("Hello, world")
-
-  With title: Boxen.boxify("Hello, world", title: "Message")
+   Options:
+   - `:box`: Type of box
+   - `:title`: Title
+   - `:title_alignment`: Alignment of title. Possible values: `:left` | `:right` | `:center`
+   - `:text_alignment`: Alignment of text inside the box. Possible values: `:left` | `:right` | `:center`
+   - `:padding`: Padding inside the box.
+   - `:margin`: Margin outside the box.
+   - `:width`: Width of the box.
+   - `:border_color`: Color of borders.
+   - `:text_color`: Text color.
   """
-  @spec boxify(input_text :: String.t(), opts :: keyword()) ::
+  @spec boxify(input_text :: String.t(), opts :: opts()) ::
           {:ok, String.t()} | {:error, String.t()}
   def boxify(input_text, opts \\ []) do
     # TODO: think about replacing if else blocks with pattern matched functions
-    # TODO: tests and docs
 
     box = Keyword.get(opts, :box, :single)
     title = Keyword.get(opts, :title, nil)
@@ -75,14 +79,7 @@ defmodule Boxen do
         |> apply_text_color(text_color)
         |> make_text(width, padding, text_alignment)
 
-      box = if is_map(box), do: Boxes.setup_box(box), else: Boxes.get_box(box)
-
-      box =
-        if border_color do
-          apply_border_color(box, border_color)
-        else
-          box
-        end
+      box = set_box(box) |> set_border_color(border_color)
 
       {:ok,
        box_content(box, input_text,
@@ -378,4 +375,10 @@ defmodule Boxen do
     default_val = %{top: 0, right: 0, bottom: 0, left: 0}
     Map.merge(default_val, val)
   end
+
+  defp set_box(box) when is_map(box), do: Boxes.setup_box(box)
+  defp set_box(box), do: Boxes.get_box(box)
+
+  defp set_border_color(box, color) when is_binary(color), do: apply_border_color(box, color)
+  defp set_border_color(box, _), do: box
 end
