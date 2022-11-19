@@ -1,16 +1,18 @@
 defmodule Boxen.MixProject do
   use Mix.Project
 
+  @version "0.2.0"
   @source_url "https://github.com/aayushmau5/boxen_ex"
 
   def project do
     [
       app: :boxen,
       description: "Boxify your texts for CLIs. Port of boxen library for elixir.",
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      docs: docs(),
       source_url: @source_url,
       package: package()
     ]
@@ -19,6 +21,14 @@ defmodule Boxen.MixProject do
   def application do
     [
       extra_applications: [:logger]
+    ]
+  end
+
+  defp docs() do
+    [
+      main: "Boxen",
+      source_ref: "v#{@version}",
+      source_url: @source_url
     ]
   end
 
