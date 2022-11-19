@@ -2,18 +2,6 @@ defmodule Boxen do
   @moduledoc """
   Port of [boxen](https://github.com/sindresorhus/boxen) library for elixir.
 
-  ## Installation
-
-  ```elixir
-  def deps do
-  [
-    {:boxen, "~> 0.1.0"}
-  ]
-  end
-  ```
-
-  Documentation: https://hexdocs.pm/boxen
-
   ## Usage
 
   ```elixir

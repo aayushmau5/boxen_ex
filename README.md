@@ -7,7 +7,7 @@ Port of [boxen](https://github.com/sindresorhus/boxen) library for elixir.
 ```elixir
 def deps do
   [
-    {:boxen, "~> 0.1.0"}
+    {:boxen, "~> 0.2.0"}
   ]
 end
 ```
